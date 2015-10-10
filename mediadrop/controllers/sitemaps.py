@@ -37,43 +37,50 @@ class SitemapsController(BaseController):
     """
     Sitemap generation
     """
+    SITEMAP_MEDIA_LIMIT = 1000
 
-    @validate(validators={
-        'page': validators.Int(if_empty=None, if_missing=None, if_invalid=None), 
-        'limit': validators.Int(if_empty=10000, if_missing=10000, if_invalid=10000)
-    })
-    @beaker_cache(expire=60 * 60 * 4)
+    @beaker_cache(expire=60 * 60 * 4, query_args=True)
     @expose('sitemaps/google.xml')
     @observable(events.SitemapsController.google)
-    def google(self, page=None, limit=10000, **kwargs):
-        """Generate a sitemap which contains googles Video Sitemap information.
+    def google(self, page=None, **kwargs):
+        """Generate a sitemap which contains Google's Video Sitemap information.
 
         This action may return a <sitemapindex> or a <urlset>, depending
-        on how many media items are in the database, and the values of the
-        page and limit params.
+        on how many media items are in the database, and the value of the
+        page parameter.
 
-        :param page: Page number, defaults to 1.
-        :type page: int
-        :param page: max records to display on page, defaults to 10000.
+        :param page: Page number, defaults to 0.
         :type page: int
 
         """
         if request.settings['sitemaps_display'] != 'True':
             abort(404)
 
+        if page is not None:
+            try:
+                page = int(page)
+            except (ValueError, TypeError):
+                abort(404)
+
+        media = viewable_media(Media.query.published())
+        
         response.content_type = \
             content_type_for_response(['application/xml', 'text/xml'])
 
-        media = viewable_media(Media.query.published())
-
         if page is None:
-            if media.count() > limit:
-                return dict(pages=math.ceil(media.count() / float(limit)))
-        else:
-            page = int(page)
-            media = media.offset(page * limit).limit(limit)
+            media_count = media.count()
+            if media_count > self.SITEMAP_MEDIA_LIMIT:
+                # sitemap needs pagination. Only return sitemapindex.
+                return dict(pages=math.ceil(media_count / float(self.SITEMAP_MEDIA_LIMIT)))
+            else:
+                # This is a small site. Act like we're on the first page (page=0)
+                page = 0
 
-        if page:
+        media = media.offset(page * self.SITEMAP_MEDIA_LIMIT).limit(self.SITEMAP_MEDIA_LIMIT)
+        if len(media) == 0:
+            abort(404)
+
+        if page >= 1:
             links = []
         else:
             links = [
