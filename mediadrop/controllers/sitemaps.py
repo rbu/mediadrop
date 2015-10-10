@@ -96,10 +96,14 @@ class SitemapsController(BaseController):
             links = links,
         )
 
+    @validate(validators={
+        'limit': LimitFeedItemsValidator(),
+        'skip': validators.Int(if_empty=0, if_missing=0, if_invalid=0)
+    })
     @beaker_cache(expire=60 * 60, query_args=True)
     @expose('sitemaps/mrss.xml')
     @observable(events.SitemapsController.mrss)
-    def mrss(self, **kwargs):
+    def mrss(self, limit=None, skip=0, **kwargs):
         """Generate a media rss (mRSS) feed of all the sites media."""
         if request.settings['sitemaps_display'] != 'True':
             abort(404)
@@ -109,6 +113,11 @@ class SitemapsController(BaseController):
             ['application/rss+xml', 'application/xml', 'text/xml'])
 
         media = viewable_media(Media.query.published())
+        if limit is not None:
+            media = media.limit(limit)
+
+        if skip > 0:
+            media = media.offset(skip)
 
         return dict(
             media = media,
