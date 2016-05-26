@@ -415,11 +415,13 @@ table.feat-meta > tbody > tr:first-child > td {
 }
 .grid li a {
 	display: block;
+	position: relative;
 	text-decoration: none;
 	width: 100%;
 	height: 120px;
 }
 .grid-title {
+	display: block;
 	text-decoration: none;
 	font-size: 13px;
 	font-weight: bold;
@@ -428,23 +430,18 @@ a:hover .grid-title,
 a:focus .grid-title {
 	text-decoration: underline;
 }
-.grid-title,
-.grid-desc,
 .grid-meta {
-	float: right;
-	width: 297px;
+	margin-left: 148px; /* .thumb-wrap's width + 8px of paddings + 20px */
 	overflow: hidden;
-	cursor: pointer;
 }
 .grid-desc {
+	display: block;
 	line-height: 18px;
 	margin: 5px 0;
-	cursor: pointer;
+	overflow: hidden;
+	text-overflow: ellipsis;
 }
 
-.grid-meta {
-	display: block;
-}
 .grid-meta .meta-likes > span {
 	position: absolute;
 	top: -5000px;
@@ -465,9 +462,14 @@ a:focus .grid-title {
 	overflow: hidden;
 	position: relative;
 	width: 128px;
-	float: left;
 	border: 1px solid #cdd2d5;
 }
+.grid .thumb-wrap {
+	position: absolute;
+	left: 0;
+	top: 0;
+}
+
 .thumb-wrap > img {
 	display: block;
 }
@@ -499,10 +501,8 @@ a:focus .grid-title {
 .m-grid .thumb-wrap {
 	width: 160px;
 }
-.m-grid .grid-title,
-.m-grid .grid-desc,
 .m-grid .grid-meta {
-	width: 259px;
+	margin-left: 180px;
 }
 
 .m-grid-column,
@@ -702,8 +702,6 @@ a:focus .grid-title {
 #podcast-context .grid-title {
 	padding-bottom: 0;
 }
-.contextbox .grid .grid-title,
-.contextbox .grid .grid-desc,
 .contextbox .grid .grid-meta {
 	width: 167px;
 }
